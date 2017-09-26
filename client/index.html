@@ -1,13 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
-    <script type="text/babel" >
+    <script src="/socket.io/socket.io.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+	<script type="text/babel">  
         "use strict";
-    
+
+        let socket; //our websocket connection
+        //total score of everyone as synced from the server
+        let totalScore;
+        //our personal generated score (score generated from this tab)
+        let myScore = 0;
+        //our personal score element on the page
+        let myScoreElem;
+        
+        const generateScore = () => {
+          /**add 10 to our personal score 
+             (hard coded number for example) **/
+          myScore += 10;
+          //update our personal score on the screen
+          myScoreElem.innerText = myScore;
+
+          socket.emit("updateScore", 10);
+        }
+        
+        /**function to display updated score from server
+           when a packet arrives **/
+        const update = (data) => {
+          totalScore.innerText = data;
+        }
+        
+        const init = () => {
+          //total score element
+          totalScore = document.querySelector("#totalScore");
+          //personal score element
+          myScoreElem = document.querySelector("#myScore");
+          totalScore.innerText = "0"; //default text for page
+
+          socket = io.connect();
+
+          //when the socket connects successfully
+          socket.on('connect', () => {
+              setInterval(generateScore, 1200);
+          });      
+
+          /**When our socket receives 'updated' messages from the
+             server, call our update function **/
+          socket.on('updated', update);
+        }
+
+      window.onload = init;
     </script>
 </head>
 <body>
-
+    <h2>Total Score: <span id="totalScore"></span></h2>
+    <h2>My Score: <span id="myScore"></span></h2>
 </body>
 </html>
